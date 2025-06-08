@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ProducerItemProperties
   m_EditorClassIdentifier: 
   itemType: 0
-  itemName: Producer
+  itemName: Phone Producer
   levelSprites:
   - {fileID: 21300000, guid: d7621effb44ddb644a0e65f18a2d3f17, type: 3}
   - {fileID: 21300000, guid: f66d7d9e638195f4c88ec5bb96f10c1a, type: 3}

@@ -3,168 +3,163 @@ using System;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
-    public enum GameState
-    {
-        MainMenu,
-        Gameplay,
-        GameOver
-    }
+	public static GameManager Instance { get; private set; }
 
-    public event Action<int> OnGoldEarned;
+	public enum GameState
+	{
+		MainMenu,
+		Gameplay,
+		GameOver
+	}
 
-    [SerializeField] private int levelIndex = 0;
-    [SerializeField] private LevelManager levelManager;
-    [SerializeField] private float maxEnergy = 100f;
-    [SerializeField] private float energyRechargeTime = 60f;
-    
-    private const string LEVEL_INDEX_KEY = "LevelIndex";
-    private GameState gameState = GameState.MainMenu;
-    private float currentEnergy;
-    private int currentCoins;
-    private float lastEnergyRechargeTime;
+	public event Action<int> OnGoldEarned;
 
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            LoadGameData();
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
+	[SerializeField] private int          levelIndex=0;
+	[SerializeField] private LevelManager levelManager;
+	[SerializeField] private float        maxEnergy         =100f;
+	[SerializeField] private float        energyRechargeTime=60f;
 
-    public void StartGame()
-    {
-        levelManager.LoadLevel(levelIndex);
-        InitializeGame();
-    }
+	private const string    LEVEL_INDEX_KEY="LevelIndex";
+	private       GameState gameState      =GameState.MainMenu;
+	private       float     currentEnergy;
+	private       int       currentCoins;
+	private       float     lastEnergyRechargeTime;
 
-    public void NextLevel()
-    {
-        levelIndex++;
-        SaveLevelIndex();
-        StartGame();
-    }
+	private void Awake()
+	{
+		if(Instance==null)
+		{
+			Instance=this;
+			DontDestroyOnLoad(gameObject);
+			LoadGameData();
+		}
+		else
+		{
+			Destroy(gameObject);
+		}
+	}
 
-    public void ResetLevelIndex()
-    {
-        levelIndex = 0;
-        SaveLevelIndex();
-    }
-    
-    private void InitializeGame()
-    {
-        currentEnergy = maxEnergy;
-        currentCoins = 0;
-        lastEnergyRechargeTime = Time.time;
-    }
+	public void StartGame()
+	{
+		levelManager.LoadLevel(levelIndex);
+		InitializeGame();
+	}
 
-    public void SetGameStarted()
-    {
-        gameState = GameState.Gameplay;
-    }
+	public void NextLevel()
+	{
+		levelIndex++;
+		SaveLevelIndex();
+		StartGame();
+	}
 
-    public GameState GetGameState()
-    {
-        return gameState;
-    }
+	public void ResetLevelIndex()
+	{
+		levelIndex=0;
+		SaveLevelIndex();
+	}
 
-    private void Update()
-    {
-        if (gameState == GameState.Gameplay)
-            UpdateEnergyRecharge();
-    }
+	private void InitializeGame()
+	{
+		currentEnergy         =maxEnergy;
+		currentCoins          =0;
+		lastEnergyRechargeTime=Time.time;
+	}
 
-    public void WinGame()
-    {
-        gameState = GameState.GameOver;
-        if (UIManager.Instance != null)
-            UIManager.Instance.WinPopup.ShowWin();
-    }
+	public void SetGameStarted() { gameState=GameState.Gameplay; }
 
-    public void LoseGame()
-    {
-        gameState = GameState.GameOver;
-        print("Game Lost");
-    }
+	public GameState GetGameState() { return gameState; }
 
-    private void SaveLevelIndex()
-    {
-        PlayerPrefs.SetInt(LEVEL_INDEX_KEY, levelIndex);
-        PlayerPrefs.Save();
-    }
+	private void Update()
+	{
+		if(gameState==GameState.Gameplay)
+			UpdateEnergyRecharge();
+	}
 
-    private void LoadGameData()
-    {
-        if (PlayerPrefs.HasKey(LEVEL_INDEX_KEY))
-        {
-            levelIndex = PlayerPrefs.GetInt(LEVEL_INDEX_KEY);
-        }
-    }
+	public void WinGame()
+	{
+		gameState=GameState.GameOver;
+		if(UIManager.Instance!=null)
+			UIManager.Instance.WinPopup.ShowWin();
+	}
 
-    private void UpdateEnergyRecharge()
-    {
-        if (currentEnergy < maxEnergy)
-        {
-            float timeSinceLastRecharge = Time.time - lastEnergyRechargeTime;
-            if (timeSinceLastRecharge >= energyRechargeTime)
-            {
-                float energyToAdd = timeSinceLastRecharge / energyRechargeTime;
-                AddEnergy(energyToAdd);
-                lastEnergyRechargeTime = Time.time;
-            }
-        }
-    }
+	public void LoseGame()
+	{
+		gameState=GameState.GameOver;
+		print("Game Lost");
+	}
 
-    public bool HasEnoughEnergy(float amount)
-    {
-        bool hasEnough = currentEnergy >= amount;
-        if (!hasEnough)
-            ShowEnergyWarning();
-        return hasEnough;
-    }
+	private void SaveLevelIndex()
+	{
+		PlayerPrefs.SetInt(LEVEL_INDEX_KEY,levelIndex);
+		PlayerPrefs.Save();
+	}
 
-    public void ConsumeEnergy(float amount)
-    {
-        currentEnergy = Mathf.Max(0f, currentEnergy - amount);
-        UpdateUIEnergy();
-    }
+	private void LoadGameData()
+	{
+		if(PlayerPrefs.HasKey(LEVEL_INDEX_KEY))
+		{
+			levelIndex=PlayerPrefs.GetInt(LEVEL_INDEX_KEY);
+		}
+	}
 
-    public void AddEnergy(float amount)
-    {
-        currentEnergy = Mathf.Min(maxEnergy, currentEnergy + amount);
-        UpdateUIEnergy();
-    }
+	private void UpdateEnergyRecharge()
+	{
+		if(currentEnergy<maxEnergy)
+		{
+			float timeSinceLastRecharge=Time.time-lastEnergyRechargeTime;
+			if(timeSinceLastRecharge>=energyRechargeTime)
+			{
+				float energyToAdd=timeSinceLastRecharge/energyRechargeTime;
+				AddEnergy(energyToAdd);
+				lastEnergyRechargeTime=Time.time;
+			}
+		}
+	}
 
-    public void AddCoins(int amount)
-    {
-        currentCoins += amount;
-        UpdateUICoins();
-        OnGoldEarned?.Invoke(amount);
-    }
+	public bool HasEnoughEnergy(float amount)
+	{
+		bool hasEnough=currentEnergy>=amount;
+		if(!hasEnough)
+			ShowEnergyWarning();
+		return hasEnough;
+	}
 
-    public void UpdateUIEnergy()
-    {
-        if (UIManager.Instance == null) return;
-        UIManager.Instance.UpdateEnergy(Mathf.RoundToInt(currentEnergy));
-    }
+	public void ConsumeEnergy(float amount)
+	{
+		currentEnergy=Mathf.Max(0f,currentEnergy-amount);
+		UpdateUIEnergy();
+	}
 
-    public void UpdateUICoins()
-    {
-        if (UIManager.Instance == null) return;
-        UIManager.Instance.UpdateGold(currentCoins);
-    }
+	public void AddEnergy(float amount)
+	{
+		currentEnergy=Mathf.Min(maxEnergy,currentEnergy+amount);
+		UpdateUIEnergy();
+	}
 
-    public void ShowEnergyWarning()
-    {
-        if (UIManager.Instance == null) return;
-        UIManager.Instance.ShowEnergyWarning();
-    }
+	public void AddCoins(int amount)
+	{
+		currentCoins+=amount;
+		UpdateUICoins();
+		OnGoldEarned?.Invoke(amount);
+	}
+
+	public void UpdateUIEnergy()
+	{
+		if(UIManager.Instance==null) return;
+		UIManager.Instance.UpdateEnergy(Mathf.RoundToInt(currentEnergy));
+	}
+
+	public void UpdateUICoins()
+	{
+		if(UIManager.Instance==null) return;
+		UIManager.Instance.UpdateGold(currentCoins);
+	}
+
+	public void ShowEnergyWarning()
+	{
+		if(UIManager.Instance==null) return;
+		UIManager.Instance.ShowEnergyWarning();
+	}
 
 }
 
